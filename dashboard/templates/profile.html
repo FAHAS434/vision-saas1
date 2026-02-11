@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Dashboard - Vision SaaS</title>
+<style>
+  body { font-family: Arial,sans-serif; background:#f4f6f9; padding:30px; }
+  .container { max-width:900px; margin:auto; }
+  .card { background:white; padding:20px; border-radius:10px; margin-bottom:20px; box-shadow:0 4px 10px rgba(0,0,0,0.05); }
+  h2,h3 { margin-top:0; }
+  .badge { padding:5px 10px; border-radius:20px; color:white; font-size:12px; }
+  .free { background:#888; }
+  .pro { background:#4CAF50; }
+  button { padding:8px 15px; border:none; border-radius:5px; cursor:pointer; margin:5px 0; }
+  .btn-primary { background:#4CAF50; color:white; }
+  .btn-test { background:#2196F3; color:white; }
+  .btn-logout { background:#e74c3c; color:white; }
+  .btn-renew { background:#FF9800; color:white; }
+  pre { background:#111; color:#0f0; padding:15px; border-radius:8px; overflow-x:auto; }
+  .progress-bar { background:#ddd; border-radius:20px; overflow:hidden; height:20px; }
+  .progress { height:100%; background:#4CAF50; text-align:center; color:white; font-size:12px; }
+  .flash { padding:10px; margin-bottom:10px; border-radius:5px; }
+  .flash-success { background:#4CAF50; color:white; }
+  .flash-error { background:#e74c3c; color:white; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Flash messages -->
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="flash flash-{{ category }}">{{ message }}</div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+
+  <!-- User Info -->
+  <div class="card">
+    <h2>Dashboard</h2>
+    <p><strong>Email:</strong> {{ email }}</p>
+    <p><strong>Plan:</strong> <span class="badge {{ plan }}">{{ plan|upper }}</span></p>
+    <p><strong>API KEY:</strong> {{ api_key }}</p>
+
+    {% if api_expired %}
+    <form method="POST" action="{{ url_for('dashboard.renew_api_key') }}">
+      <button class="btn-renew">Renew API Key 🔄</button>
+    </form>
+    {% endif %}
+  </div>
+
+  <!-- API Usage -->
+  <div class="card">
+    <h3>📊 API Usage Today</h3>
+    <p><strong>Total Calls:</strong> {{ total_calls }} / {{ limit }}</p>
+    <div class="progress-bar">
+      <div class="progress" style="width: {{ percent }}%">{{ percent }}%</div>
+    </div>
+    <ul>
+      {% for usage in usages %}
+        <li>{{ usage.endpoint }} → {{ usage.count }} calls</li>
+      {% else %}
+        <li>No usage yet</li>
+      {% endfor %}
+    </ul>
+  </div>
+
+  <!-- Test API -->
+  <div class="card">
+    <h3>🧪 Test API</h3>
+    <button class="btn-test" onclick="testApi('/slide')">Test /slide</button>
+    <button class="btn-test" onclick="testApi('/rotate')">Test /rotate</button>
+    <button class="btn-test" onclick="testApi('/shapes')">Test /shapes</button>
+    <button class="btn-test" onclick="testApi('/icons')">Test /icons</button>
+    <pre id="result"></pre>
+  </div>
+
+  <!-- Upgrade Plan -->
+  {% if plan == "free" %}
+  <div class="card">
+    <h3>🚀 Upgrade to PRO</h3>
+    <form method="POST" action="{{ url_for('dashboard.subscribe') }}">
+      <button class="btn-primary">Upgrade Now ($19/month)</button>
+    </form>
+  </div>
+  {% endif %}
+
+  <!-- Logout -->
+  <button class="btn-logout" onclick="window.location.href='{{ url_for('dashboard.logout') }}'">Logout</button>
+
+</div>
+
+<script>
+function testApi(endpoint) {
+  fetch("/api"+endpoint, {
+    method:"POST",
+    headers:{
+      "Content-Type":"application/json",
+      "X-API-KEY":"{{ api_key }}"
+    },
+    body:JSON.stringify({test:"data"})
+  })
+  .then(r=>r.json())
+  .then(d=>document.getElementById("result").innerText = JSON.stringify(d,null,2))
+  .catch(e=>document.getElementById("result").innerText=e)
+}
+</script>
+</body>
+</html>
