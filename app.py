@@ -1,6 +1,6 @@
 from flask import Flask, render_template
 from models import db
-from dashboard import dashboard_bp
+from dashboard.routes import dashboard_bp
 from api import api_bp
 from config import Config
 
