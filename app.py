@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, render_template
 from models import db
 from dashboard import dashboard_bp
 from api import api_bp
@@ -12,8 +12,13 @@ db.init_app(app)
 app.register_blueprint(dashboard_bp)
 app.register_blueprint(api_bp)
 
+# ✅ AJOUTE ÇA
+@app.route("/")
+def home():
+    return render_template("landing.html")
+
 with app.app_context():
-    db.create_all()  # Créer la DB si elle n'existe pas
+    db.create_all()
 
 if __name__ == "__main__":
     app.run(debug=True)
